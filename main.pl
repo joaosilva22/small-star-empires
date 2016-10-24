@@ -1,0 +1,2 @@
+:- ['board.pl',
+    'game.pl'].
