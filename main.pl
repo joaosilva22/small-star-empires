@@ -1,2 +1,3 @@
-:- ['board.pl',
-    'game.pl'].
+:- initialization(['board.pl',
+    'game.pl']).
+	
