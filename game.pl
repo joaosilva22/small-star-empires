@@ -14,17 +14,54 @@ geraMelhorTabuleiro(+Tabuleiro, +Jogador, -MelhorTabuleiro) :-
     geraTabuleiro(+Tabuleiro, -possiveisTabuleiros),
     avaliaTabuleiros(+PossiveisTabuleiros, -MelhorTabuleiro).*/
 
-	
-getBoardCell(0,Pz,[X|_],Cell) :-
-	getBoardCell(Pz,X,Cell).
-	
-getBoardCell( Px, Pz, [_|Ys], Cell) :-
-	NPx is Px - 1,
-	getBoardCell(NPx,Pz,Ys,Cell).
-	
+readPlayerInput(X1, Z1, X2, Z2, Structure) :-
+    write('Select source X coordinate: '),
+    read(X1),
+    write('Select source Z coordinate: '),
+    read(Z1),
+    write('Select destination X coordinate: '),
+    read(X2),
+    write('Select destination Z coordinate: '),
+    read(Z2),
+    write('Select the type of structure to place (colony or trade station): '),
+    read(Structure).
 
-getBoardCell(0,[Cell|_],Cell).
-	
-getBoardCell(Pz,[_|Ys], Cell) :-
-	NPz is Pz - 1,
-	getBoardCell(NPz,Ys,Cell).
+validatePlayerInput(Faction, Board, X1, Z1, X2, Z2, Structure) :-
+    getBoardSize(Board, Size),
+    X1 < Size,
+    Z1 < Size,
+    X2 < Size,
+    Z2 < Size,
+    (Structure == 'colony'; Structure == 'trade station').
+
+processPlayerInput(Faction, Board, X1, Z1, X2, Z2, Structure) :-
+    repeat,
+    readPlayerInput(X1, Z1, X2, Z2, Structure),
+    validatePlayerInput(Faction, Board, X1, Z1, X2, Z2, Structure).
+
+playerMove(0, Board, NewBoard) :- playFactionOne(Board, NewBoard).
+playerMove(1, Board, NewBoard) :- playFactionTwo(Board, NewBoard).
+
+playFactionOne(Board, NewBoard) :-
+    repeat,
+    write('\n----------Current Turn: Faction One----------\n'),
+    printboard(Board),
+    readPlayerInput(X1, Z1, X2, Z2, Structure),
+    validatePlayerInput(factionOne, Board, X1, Z1, X2, Z2, Structure),
+    moveShip(factionOne, Board, X1, Z1, X2, Z2, TempBoard),
+    placeStructure(Faction, TempBoard, Structure, X2, Z2, NewBoard).
+playFactionTwo(Board, NewBoard) :-
+    repeat,
+    write('\n----------Current Turn: Faction Two----------\n'),
+    printboard(Board),
+    readPlayerInput(X1, Z1, X2, Z2, Structure),
+    validatePlayerInput(factionTwo, Board, X1, Z1, X2, Z2, Structure),
+    moveShip(factionTwo, Board, X1, Z1, X2, Z2, TempBoard),
+    placeStructure(Faction, TempBoard, Structure, X2, Z2, NewBoard).
+
+play(Turn, Board) :-
+    Faction is Turn mod 2,
+    playerMove(Faction, Board, NewBoard),
+    NTurn is Turn+1,
+    play(NTurn, NewBoard).
+    

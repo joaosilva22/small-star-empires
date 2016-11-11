@@ -1,3 +1,5 @@
 :- initialization(['board.pl',
-    'game.pl']).
+		   'game.pl',
+		   'rules.pl',
+		   'display.pl']).
 	
