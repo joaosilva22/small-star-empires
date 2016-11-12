@@ -131,12 +131,51 @@ isUnobstructed(Faction, Board, X1, Z1, X2, Z2) :-
     (Z1 < Z2 -> NZ1 is Z1+1; NZ1 is Z2-1),
     isUnobstructed(Faction, Board, NX1, NZ1, X2, Z2).
 
+isAdjacentToWormhole(X, Z, Board) :-
+    NX is X+1,
+    getMapLayer(NX, Z, Board, System),
+    wormholeSystem(System).
+isAdjacentToWormhole(X, Z, Board) :-
+    NX is X-1,
+    getMapLayer(NX, Z, Board, System),
+    wormholeSystem(System).
+isAdjacentToWormhole(X, Z, Board) :-
+    NZ is Z+1,
+    getMapLayer(X, NZ, Board, System),
+    wormholeSystem(System).
+isAdjacentToWormhole(X, Z, Board) :-
+    NZ is Z-1,
+    getMapLayer(X, NZ, Board, System),
+    wormholeSystem(System).
+isAdjacentToWormhole(X, Z, Board) :-
+    NX is X+1,
+    NZ is Z-1,
+    getMapLayer(NX, NZ, Board, System),
+    wormholeSystem(System).
+isAdjacentToWormhole(X, Z, Board) :-
+    NX is X-1,
+    NZ is Z+1,
+    getMapLayer(NX, NZ, Board, System),
+    wormholeSystem(System).
+
 moveShip(Faction, Board, X1, Z1, X2, Z2, NewBoard) :-
     getMovementLayer(X1, Z1, Board, Value),
     ship(Faction, Ship),
     Value == Ship,
     isStraightLine(X1, Z1, X2, Z2),
     isUnobstructed(Faction, Board, X1, Z1, X2, Z2),
+    setMovementLayer(X1, Z1, Board, ' ', TempBoard),
+    setMovementLayer(X2, Z2, TempBoard, Ship, NewBoard).
+moveShip(Faction, Board, X1, Z1, X2, Z2, NewBoard) :-
+    getMovementLayer(X1, Z1, Board, Value),
+    ship(Faction, Ship),
+    Value == Ship,
+    isAdjacentToWormhole(X1, Z1, Board),
+    isAdjacentToWormhole(X2, Z2, Board),
+    getMapLayer(X2, Z2, Board, System),
+    canMoveInto(System),
+    getStructureLayer(X2, Z2, Board, Structure),
+    canMoveInto(Structure),
     setMovementLayer(X1, Z1, Board, ' ', TempBoard),
     setMovementLayer(X2, Z2, TempBoard, Ship, NewBoard).
 
@@ -154,3 +193,6 @@ placeStructure(Faction, Board, 'colony', X, Z, NewBoard) :-
     placeColony(Faction, Board, X, Z, NewBoard).
 placeStructure(Faction, Board, 'trade station', X, Z, NewBoard) :-
     placeTradeStation(Faction, Board, X, Z, NewBoard).
+
+
+    
