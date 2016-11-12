@@ -18,7 +18,7 @@ printboard(Board) :-
     nl,
     write(' '),
     printcolindexes(Board, 0),
-    printboard(Board, 0).
+    printboard(Board, 0), !.
 
 printboard([], _).
 printboard([X|Ys], N) :-
@@ -85,3 +85,5 @@ printcolindexes([_|Ys], N) :-
     write('  '),
     N1 is N+1,
     printcolindexes(Ys, N1).
+
+cls :- write('\33[H\33\[2J'). %write('\e[H\e[2J').

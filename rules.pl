@@ -8,6 +8,8 @@ ship(factionTwo, 'B').
 
 % System Types
 
+void(v).
+
 baseSystem(g).
 baseSystem(h).
 
@@ -44,6 +46,8 @@ owns(factionTwo, k).
 % Movement Into System
 
 cantMoveInto(System) :-
+    void(System).
+cantMoveInto(System) :-
     blackholeSystem(System).
 cantMoveInto(System) :-
     wormholeSystem(System).
@@ -56,6 +60,8 @@ canMoveInto(System) :- \+ cantMoveInto(System).
 
 % Passing Through System
 
+cantPassTrrough(_, System) :-
+    void(System).
 cantPassThrough(_, System) :-
     blackholeSystem(System).
 cantPassThrough(factionOne, System) :-

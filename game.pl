@@ -15,15 +15,15 @@ geraMelhorTabuleiro(+Tabuleiro, +Jogador, -MelhorTabuleiro) :-
     avaliaTabuleiros(+PossiveisTabuleiros, -MelhorTabuleiro).*/
 
 readPlayerInput(X1, Z1, X2, Z2, Structure) :-
-    write('Select source X coordinate: '),
+    write('Select source X coordinate '),
     read(X1),
-    write('Select source Z coordinate: '),
+    write('Select source Z coordinate '),
     read(Z1),
-    write('Select destination X coordinate: '),
+    write('Select destination X coordinate '),
     read(X2),
-    write('Select destination Z coordinate: '),
+    write('Select destination Z coordinate '),
     read(Z2),
-    write('Select the type of structure to place (colony or trade station): '),
+    write('Select the type of structure to place (colony or trade station) '),
     read(Structure).
 
 validatePlayerInput(Faction, Board, X1, Z1, X2, Z2, Structure) :-
@@ -44,24 +44,25 @@ playerMove(1, Board, NewBoard) :- playFactionTwo(Board, NewBoard).
 
 playFactionOne(Board, NewBoard) :-
     repeat,
-    write('\n----------Current Turn: Faction One----------\n'),
+    cls,
+    write('\n----------- Current Turn: Faction One -----------\n'),
     printboard(Board),
     readPlayerInput(X1, Z1, X2, Z2, Structure),
     validatePlayerInput(factionOne, Board, X1, Z1, X2, Z2, Structure),
     moveShip(factionOne, Board, X1, Z1, X2, Z2, TempBoard),
-    placeStructure(Faction, TempBoard, Structure, X2, Z2, NewBoard).
+    placeStructure(Faction, TempBoard, Structure, X2, Z2, NewBoard),!.
 playFactionTwo(Board, NewBoard) :-
     repeat,
-    write('\n----------Current Turn: Faction Two----------\n'),
+    cls,
+    write('\n----------- Current Turn: Faction Two -----------\n'),
     printboard(Board),
     readPlayerInput(X1, Z1, X2, Z2, Structure),
     validatePlayerInput(factionTwo, Board, X1, Z1, X2, Z2, Structure),
     moveShip(factionTwo, Board, X1, Z1, X2, Z2, TempBoard),
-    placeStructure(Faction, TempBoard, Structure, X2, Z2, NewBoard).
+    placeStructure(Faction, TempBoard, Structure, X2, Z2, NewBoard),!.
 
 play(Turn, Board) :-
     Faction is Turn mod 2,
     playerMove(Faction, Board, NewBoard),
     NTurn is Turn+1,
     play(NTurn, NewBoard).
-    
