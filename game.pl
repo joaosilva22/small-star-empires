@@ -128,6 +128,8 @@ hasEnemyStructure(Faction, Board, X, Z, Result) :-
     baseSystem(System),
     \+ owns(Faction, System),
     Result is 1,!.
+hasEnemyStructure(Faction, Board, X, Z, Result) :-
+    Result is 0,!.
 
 hasEnemyStructureLeft(Faction, Board, 0, Z, Result) :-
     Result is 0,!.
@@ -151,7 +153,7 @@ hasEnemyStructureRight(Faction, Board, X, Z, Result) :-
 hasEnemyStructureTop(Faction, Board, X, 0, Result) :-
     Result is 0,!.
 hasEnemyStructureTop(Faction, Board, X, Z, Result) :-
-    Z < 0,
+    Z > 0,
     Z1 is Z-1,
     hasEnemyStructure(Faction, Board, X, Z1, Result),!.
 
@@ -197,7 +199,7 @@ hasEnemyStructureTopRight(Faction, Board, X, Z, Result) :-
     X < NSize,
     X1 is X+1,
     Z1 is Z-1,
-    hasEnemyStructure(Faction, Board, X, Z, Result),!.
+    hasEnemyStructure(Faction, Board, X1, Z1, Result),!.
     
 countAdjacentEnemyStructures(Faction, Board, X, Z, Result) :-
     Current is 0,
@@ -214,14 +216,34 @@ countAdjacentEnemyStructures(Faction, Board, X, Z, Result) :-
     hasEnemyStructureBottomLeft(Faction, Board, X, Z, BottomLeft),
     Result is Current5+BottomLeft.
 
-calculateTradeStationPoints(Faction, Board, X, Z, Points) :-
+calculateTradeStationPoints(Faction, Board, Points) :-
+    calculateTradeStationPoints(Faction, Board, 0, 0, 0, Points),!.
+calculateTradeStationPoints(Faction, Board, X, Z, CurrentPoints, CurrentPoints) :-
+    getBoardSize(Board, Size),
+    X == Size,
+    Z == Size.
+calculateTradeStationPoints(Faction, Board, X, Z, CurrentPoints, Points) :-
+    getBoardSize(Board, Size),
+    X == Size,
+    NX is 0,
+    NZ is Z+1,
+    calculateTradeStationPoints(Faction, Board, NX, NZ, CurrentPoints, Points).
+calculateTradeStationPoints(Faction, Board, X, Z, CurrentPoints, Points) :-
     getBoardSize(Board, Size),
     X < Size,
     getStructureLayer(X, Z, Board, Structure),
     tradeStation(Structure),
     owns(Owner, Structure),
     Owner == Faction,
-    countAdjacentEnemyStructures(Faction, Board, X, Z, Points),!.
+    countAdjacentEnemyStructures(Faction, Board, X, Z, AdjacentPoints),
+    NCurrentPoints is CurrentPoints+AdjacentPoints,
+    NX is X+1,
+    calculateTradeStationPoints(Faction, Board, NX, Z, NCurrentPoints, Points).
+calculateTradeStationPoints(Faction, Board, X, Z, CurrentPoints, Points) :-
+    getBoardSize(Board, Size),
+    X < Size,
+    NX is X+1,
+    calculateTradeStationPoints(Faction, Board, NX, Z, CurrentPoints, Points).
 
 countNebulae(Faction, Board, Colour, Number) :-
     countNebulae(Faction, Board, 0, 0, Colour, 0, Number), !.
@@ -293,9 +315,9 @@ calculateNebulaePoints(Faction, Board, Points) :-
     nebulaePointsMultiplier(BlueNumber, BluePoints),
     Points is CurrentTotal + BluePoints,!.
     
-    
-
-    
-    
-
-	
+calculateTotalPoints(Faction, Board, Points) :-
+    calculatePlanetarySystemPoints(Faction, Board, PlanetaryPoints),
+    calculateTradeStationPoints(Faction, Board, TradePoints),
+    CurrentTotal is PlanetaryPoints+TradePoints,
+    calculateNebulaePoints(Faction, Board, NebulaePoints),
+    Points is CurrentTotal+NebulaePoints.
