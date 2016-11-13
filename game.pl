@@ -23,9 +23,11 @@ readPlayerInput(X1, Z1, X2, Z2, Structure) :-
     read(Destination),
     nth0(0, Destination, X2),
     nth0(1, Destination, Z2),    
-    write('# Select the type of structure to place (\'colony\' or \'trade station\') # '),
+    write('# Select the type of structure to place (\'colony\' or \'trade station\' or \'exit\' to leave game) # '),
     read(Structure).
 
+validatePlayerInput(_,_,_,_,_,_,'exit') :-
+    showMenu,!.
 validatePlayerInput(Faction, Board, X1, Z1, X2, Z2, Structure) :-
     getBoardSize(Board, Size),
     X1 < Size,

@@ -130,6 +130,7 @@ displayPlayingMessage(factionTwo, 4) :-
     write('###############################\n').
 
 showMenu :-
+    !,
     cls,
     banner(Banner),
     write(Banner),
@@ -147,7 +148,7 @@ showMenu :-
     write('#########################\n'), nl,
     write('Your option: '),
     read(Mode),
-    processMenuInput(Mode).
+    processMenuInput(Mode),!.
 
 showHelp :-
     write('\n#######################################################################################################################\n'),
@@ -162,7 +163,7 @@ processMenuInput(Mode) :-
     NMode is Mode-1,
     board(Board),
     play(0, Board, NMode),!.
-processMenuInput(_).
+processMenuInput(_) :- abort.
 
 banner("   _____                 _ _    _____ _               ______                 _               
   / ____|               | | |  / ____| |             |  ____|               (_)              
@@ -172,3 +173,4 @@ banner("   _____                 _ _    _____ _               ______            
  |_____/|_| |_| |_|\\__,_|_|_| |_____/ \\__\\__,_|_|    |______|_| |_| |_| .__/|_|_|  \\___||___/
                                                                       | |                    
                                                                       |_|                    \n").
+begin :- showMenu.
