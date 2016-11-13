@@ -15,15 +15,15 @@ geraMelhorTabuleiro(+Tabuleiro, +Jogador, -MelhorTabuleiro) :-
     avaliaTabuleiros(+PossiveisTabuleiros, -MelhorTabuleiro).*/
 
 readPlayerInput(X1, Z1, X2, Z2, Structure) :-
-    write('Select source X coordinate '),
-    read(X1),
-    write('Select source Z coordinate '),
-    read(Z1),
-    write('Select destination X coordinate '),
-    read(X2),
-    write('Select destination Z coordinate '),
-    read(Z2),
-    write('Select the type of structure to place (colony or trade station) '),
+    write('# Select source coordinates [X, Z] # '),
+    read(Source),
+    nth0(0, Source, X1),
+    nth0(1, Source, Z1),
+    write('# Select destination coordinates [X, Z] # '),
+    read(Destination),
+    nth0(0, Destination, X2),
+    nth0(1, Destination, Z2),    
+    write('# Select the type of structure to place (\'colony\' or \'trade station\') # '),
     read(Structure).
 
 validatePlayerInput(Faction, Board, X1, Z1, X2, Z2, Structure) :-
@@ -46,15 +46,17 @@ playFactionOne(Board, NewBoard, Mode) :-
     (Mode == 0 ; Mode == 1; Mode == 4),
     repeat,
     cls,
-    write('\n----------- Current Turn: Faction One -----------\n'),
+    displayPlayingMessage(factionOne, Mode),
     printboard(Board),
+    showHelp,
     readPlayerInput(X1, Z1, X2, Z2, Structure),
     validatePlayerInput(factionOne, Board, X1, Z1, X2, Z2, Structure),
     moveShip(factionOne, Board, X1, Z1, X2, Z2, TempBoard),
-    placeStructure(Faction, TempBoard, Structure, X2, Z2, NewBoard),!.
+    placeStructure(factionOne, TempBoard, Structure, X2, Z2, NewBoard),!.
 playFactionOne(Board, NewBoard, 2) :-
     repeat,
     cls,
+    displayPlayingMessage(factionOne, 2),
     getAllPossibleBoards(factionOne, Board, 0, 0, [], PossibleBoards),
     length(PossibleBoards, Length),
     random(0, Length, BoardNumber),
@@ -62,21 +64,24 @@ playFactionOne(Board, NewBoard, 2) :-
     printboard(NewBoard),!.
 playFactionOne(Board, NewBoard, 3) :-
     cls,
+    displayPlayingMessage(factionOne, 3),
     getBestBoard(factionOne, Board, NewBoard),
     printboard(NewBoard),!.
 playFactionTwo(Board, NewBoard, 0) :-
     repeat,
     cls,
-    write('\n----------- Current Turn: Faction Two -----------\n'),
+    displayPlayingMessage(factionTwo, 0),
     printboard(Board),
+    showHelp,
     readPlayerInput(X1, Z1, X2, Z2, Structure),
     validatePlayerInput(factionTwo, Board, X1, Z1, X2, Z2, Structure),
     moveShip(factionTwo, Board, X1, Z1, X2, Z2, TempBoard),
-    placeStructure(Faction, TempBoard, Structure, X2, Z2, NewBoard),!.
+    placeStructure(factionTwo, TempBoard, Structure, X2, Z2, NewBoard),!.
 playFactionTwo(Board, NewBoard, Mode) :-
     (Mode == 1 ; Mode == 2),
     repeat,
     cls,
+    displayPlayingMessage(factionTwo, Mode),
     getAllPossibleBoards(factionTwo, Board, 0, 0, [], PossibleBoards),
     length(PossibleBoards, Length),
     random(0, Length, BoardNumber),
@@ -85,6 +90,7 @@ playFactionTwo(Board, NewBoard, Mode) :-
 playFactionTwo(Board, NewBoard, Mode) :-
     (Mode == 3 ; Mode == 4),
     cls,
+    displayPlayingMessage(factionTwo, Mode),
     getBestBoard(factionTwo, Board, NewBoard),
     printboard(NewBoard),!.
 
@@ -98,30 +104,35 @@ isGameOver(Board) :-
     FactionTwoBoards==0,!.
 
 printWinner(Points, Points) :-
-    write('It\'s a tie.\n').
+    write('Faction One: '), write(Points1), write(' Points\n'),
+    write('Faction Two: '), write(Points2), write(' Points\n'),
+    write('\nIt\'s a tie.\n').
 printWinner(Points1, Points2) :-
     Points1 > Points2,
     write('Faction One: '), write(Points1), write(' Points\n'),
     write('Faction Two: '), write(Points2), write(' Points\n'),
-    write('Faction One Won!\n').
+    write('\nFaction One Won!\n').
 printWinner(Points1, Points2) :-
     Points1 < Points2,
     write('Faction Two: '), write(Points2), write(' Points\n'),
     write('Faction One: '), write(Points1), write(' Points\n'),
-    write('Faction Two Won!\n').
+    write('\nFaction Two Won!\n').
 findWinner(Board) :-
     calculateTotalPoints(factionOne, Board, FactionOnePoints),
     calculateTotalPoints(factionTwo, Board, FactionTwoPoints),
     printWinner(FactionOnePoints, FactionTwoPoints).
 
-% Modos: 0-PvP, 1-EasyBot, 2-EzvEz
-% Mode 0
 play(Turn, Board, Mode) :-
     isGameOver(Board),
     cls,
+    write('###############################\n'),
+    write('#        Game is over!        #\n'),
+    write('###############################\n\n'),
     printboard(Board),
-    write('Game is over!\n'),
-    findWinner(Board),!.
+    findWinner(Board),
+    write('Write anything to go back to the menu: '),
+    read(_),
+    showMenu.
 play(Turn, Board, Mode) :-
     Faction is Turn mod 2,
     playerMove(Faction, Board, NewBoard, Mode),
@@ -416,4 +427,3 @@ getBestBoard(Faction, Board, NewBoard) :-
     getAllPossiblePoints(Faction, Result, 0, [], Points),
     getHighestValue(Points, Value, Index),
     nth0(Index, Result, NewBoard).
-    
