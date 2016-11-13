@@ -39,10 +39,11 @@ processPlayerInput(Faction, Board, X1, Z1, X2, Z2, Structure) :-
     readPlayerInput(X1, Z1, X2, Z2, Structure),
     validatePlayerInput(Faction, Board, X1, Z1, X2, Z2, Structure).
 
-playerMove(0, Board, NewBoard) :- playFactionOne(Board, NewBoard).
-playerMove(1, Board, NewBoard) :- playFactionTwo(Board, NewBoard).
+playerMove(0, Board, NewBoard, Mode) :- playFactionOne(Board, NewBoard, Mode).
+playerMove(1, Board, NewBoard, Mode) :- playFactionTwo(Board, NewBoard, Mode).
 
-playFactionOne(Board, NewBoard) :-
+playFactionOne(Board, NewBoard, Mode) :-
+    (Mode == 0 ; Mode == 1; Mode == 4),
     repeat,
     cls,
     write('\n----------- Current Turn: Faction One -----------\n'),
@@ -51,7 +52,19 @@ playFactionOne(Board, NewBoard) :-
     validatePlayerInput(factionOne, Board, X1, Z1, X2, Z2, Structure),
     moveShip(factionOne, Board, X1, Z1, X2, Z2, TempBoard),
     placeStructure(Faction, TempBoard, Structure, X2, Z2, NewBoard),!.
-playFactionTwo(Board, NewBoard) :-
+playFactionOne(Board, NewBoard, 2) :-
+    repeat,
+    cls,
+    getAllPossibleBoards(factionOne, Board, 0, 0, [], PossibleBoards),
+    length(PossibleBoards, Length),
+    random(0, Length, BoardNumber),
+    nth0(BoardNumber, PossibleBoards, NewBoard),
+    printboard(NewBoard),!.
+playFactionOne(Board, NewBoard, 3) :-
+    cls,
+    getBestBoard(factionOne, Board, NewBoard),
+    printboard(NewBoard),!.
+playFactionTwo(Board, NewBoard, 0) :-
     repeat,
     cls,
     write('\n----------- Current Turn: Faction Two -----------\n'),
@@ -60,12 +73,60 @@ playFactionTwo(Board, NewBoard) :-
     validatePlayerInput(factionTwo, Board, X1, Z1, X2, Z2, Structure),
     moveShip(factionTwo, Board, X1, Z1, X2, Z2, TempBoard),
     placeStructure(Faction, TempBoard, Structure, X2, Z2, NewBoard),!.
+playFactionTwo(Board, NewBoard, Mode) :-
+    (Mode == 1 ; Mode == 2),
+    repeat,
+    cls,
+    getAllPossibleBoards(factionTwo, Board, 0, 0, [], PossibleBoards),
+    length(PossibleBoards, Length),
+    random(0, Length, BoardNumber),
+    nth0(BoardNumber, PossibleBoards, NewBoard),
+    printboard(NewBoard),!.
+playFactionTwo(Board, NewBoard, Mode) :-
+    (Mode == 3 ; Mode == 4),
+    cls,
+    getBestBoard(factionTwo, Board, NewBoard),
+    printboard(NewBoard),!.
 
-play(Turn, Board) :-
+isGameOver(Board) :-
+    getAllPossibleBoards(factionOne, Board, 0, 0, [], FactionOne),
+    length(FactionOne, FactionOneBoards),
+    FactionOneBoards==0,!.
+isGameOver(Board) :-
+    getAllPossibleBoards(factionTwo, Board, 0, 0, [], FactionTwo),
+    length(FactionTwo, FactionTwoBoards),
+    FactionTwoBoards==0,!.
+
+printWinner(Points, Points) :-
+    write('It\'s a tie.\n').
+printWinner(Points1, Points2) :-
+    Points1 > Points2,
+    write('Faction One: '), write(Points1), write(' Points\n'),
+    write('Faction Two: '), write(Points2), write(' Points\n'),
+    write('Faction One Won!\n').
+printWinner(Points1, Points2) :-
+    Points1 < Points2,
+    write('Faction Two: '), write(Points2), write(' Points\n'),
+    write('Faction One: '), write(Points1), write(' Points\n'),
+    write('Faction Two Won!\n').
+findWinner(Board) :-
+    calculateTotalPoints(factionOne, Board, FactionOnePoints),
+    calculateTotalPoints(factionTwo, Board, FactionTwoPoints),
+    printWinner(FactionOnePoints, FactionTwoPoints).
+
+% Modos: 0-PvP, 1-EasyBot, 2-EzvEz
+% Mode 0
+play(Turn, Board, Mode) :-
+    isGameOver(Board),
+    cls,
+    printboard(Board),
+    write('Game is over!\n'),
+    findWinner(Board),!.
+play(Turn, Board, Mode) :-
     Faction is Turn mod 2,
-    playerMove(Faction, Board, NewBoard),
+    playerMove(Faction, Board, NewBoard, Mode),
     NTurn is Turn+1,
-    play(NTurn, NewBoard).
+    play(NTurn, NewBoard, Mode).
 
 calculatePlanetarySystemPoints(Faction, Board, Points) :-
     calculatePlanetarySystemPoints(Faction, Board, 0, 0, 0, Points),!.
@@ -321,3 +382,38 @@ calculateTotalPoints(Faction, Board, Points) :-
     CurrentTotal is PlanetaryPoints+TradePoints,
     calculateNebulaePoints(Faction, Board, NebulaePoints),
     Points is CurrentTotal+NebulaePoints.
+
+getHighestValue(List, Value, Index) :-
+    getHighestValue(List, 0, 0, 0, Value, Index),!.
+getHighestValue([], HighValue, HighIndex, CurrentIndex, HighValue, HighIndex).
+getHighestValue([X|Ys], HighValue, HighIndex, CurrentIndex, Value, Index) :-
+    X > HighValue,
+    NHighValue is X,
+    NHighIndex is CurrentIndex,
+    NCurrentIndex is CurrentIndex+1,
+    getHighestValue(Ys, NHighValue, NHighIndex, NCurrentIndex, Value, Index).
+getHighestValue([X|Ys], HighValue, HighIndex, CurrentIndex, Value, Index) :-
+    NCurrentIndex is CurrentIndex+1,
+    getHighestValue(Ys, HighValue, HighIndex, NCurrentIndex, Value, Index).
+
+getAllPossiblePoints(Faction, PossibleBoards, Index, Current, Current) :-
+    length(PossibleBoards, Length),
+    Index == Length,!.
+getAllPossiblePoints(Faction, PossibleBoards, Index, [], Points) :-
+    nth0(Index, PossibleBoards, CurrentBoard),
+    calculateTotalPoints(Faction, CurrentBoard, CurrentPoints),
+    NIndex is Index+1,
+    getAllPossiblePoints(Faction, PossibleBoards, NIndex, [CurrentPoints], Points).
+getAllPossiblePoints(Faction, PossibleBoards, Index, Current, Points) :-
+    nth0(Index, PossibleBoards, CurrentBoard),
+    calculateTotalPoints(Faction, CurrentBoard, CurrentPoints),
+    append(Current, [CurrentPoints], NPoints),
+    NIndex is Index+1,
+    getAllPossiblePoints(Faction, PossibleBoards, NIndex, NPoints, Points).
+
+getBestBoard(Faction, Board, NewBoard) :-
+    getAllPossibleBoards(Faction, Board, 0, 0, [], Result),
+    getAllPossiblePoints(Faction, Result, 0, [], Points),
+    getHighestValue(Points, Value, Index),
+    nth0(Index, Result, NewBoard).
+    

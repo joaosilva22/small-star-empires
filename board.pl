@@ -1,7 +1,7 @@
 % Initial Board Definition
 
-board([[[' ',v,l],[' ',v,p],[' ',v,' '],['A',g,' '],['A',g,' '],[' ',2,' '],[' ',0,' '],[' ',v,' '],[' ',v,' ']],
-       [[' ',v,p],[' ',v,p],['A',g,' '],['A',g,' '],[' ',1,' '],[' ',b,' '],[' ',1,' '],[' ',2,' '],[' ',1,' ']],
+board([[[' ',v,' '],[' ',v,' '],[' ',v,' '],['A',g,' '],['A',g,' '],[' ',2,' '],[' ',0,' '],[' ',v,' '],[' ',v,' ']],
+       [[' ',v,' '],[' ',v,' '],['A',g,' '],['A',g,' '],[' ',1,' '],[' ',b,' '],[' ',1,' '],[' ',2,' '],[' ',1,' ']],
        [[' ',v,' '],[' ',v,' '],[' ',0,' '],[' ',1,' '],[' ',3,' '],[' ',z,o],[' ',3,' '],[' ',w,' '],[' ',0,' ']],
        [[' ',v,' '],[' ',1,' '],[' ',w,' '],[' ',2,p],[' ',1,' '],[' ',2,' '],[' ',1,' '],[' ',1,' '],[' ',v,' ']],
        [[' ',v,' '],[' ',3,' '],[' ',1,l],[' ',1,' '],[' ',z,' '],[' ',1,' '],[' ',1,' '],[' ',0,' '],[' ',v,' ']],
@@ -96,7 +96,9 @@ canMoveIntoCell(Board, X, Z) :-
     getMapLayer(X, Z, Board, System),
     canMoveInto(System),
     getStructureLayer(X, Z, Board, Structure),
-    canMoveInto(Structure).
+    canMoveInto(Structure),
+    getMovementLayer(X, Z, Board, Ship),
+    canMoveInto(Ship).
 
 canPassThroughCell(Faction, Board, X, Z) :-
     getMapLayer(X, Z, Board, System),
@@ -159,6 +161,9 @@ isAdjacentToWormhole(X, Z, Board) :-
     wormholeSystem(System).
 
 moveShip(Faction, Board, X1, Z1, X2, Z2, NewBoard) :-
+    DX is X1-X2,
+    DZ is Z1-Z2,
+    \+ (DX == 0, DZ == 0),
     getMovementLayer(X1, Z1, Board, Value),
     ship(Faction, Ship),
     Value == Ship,
@@ -167,15 +172,15 @@ moveShip(Faction, Board, X1, Z1, X2, Z2, NewBoard) :-
     setMovementLayer(X1, Z1, Board, ' ', TempBoard),
     setMovementLayer(X2, Z2, TempBoard, Ship, NewBoard).
 moveShip(Faction, Board, X1, Z1, X2, Z2, NewBoard) :-
+    DX is X1-X2,
+    DZ is Z1-Z2,
+    \+ (DX == 0, DZ == 0),
     getMovementLayer(X1, Z1, Board, Value),
     ship(Faction, Ship),
     Value == Ship,
     isAdjacentToWormhole(X1, Z1, Board),
     isAdjacentToWormhole(X2, Z2, Board),
-    getMapLayer(X2, Z2, Board, System),
-    canMoveInto(System),
-    getStructureLayer(X2, Z2, Board, Structure),
-    canMoveInto(Structure),
+    canMoveIntoCell(Board, X2, Z2),
     setMovementLayer(X1, Z1, Board, ' ', TempBoard),
     setMovementLayer(X2, Z2, TempBoard, Ship, NewBoard).
 
@@ -194,5 +199,83 @@ placeStructure(Faction, Board, 'colony', X, Z, NewBoard) :-
 placeStructure(Faction, Board, 'trade station', X, Z, NewBoard) :-
     placeTradeStation(Faction, Board, X, Z, NewBoard).
 
+getShipPosition(Faction, Board, X, Z) :-
+    getShipPosition(Faction, Board, 0, 0, X, Z).
+getShipPosition(Faction, Board, X, Z, Px, Pz) :-
+    getBoardSize(Board, Size),
+    X == Size,
+    Z == Size,
+    Px is -1, Pz is -1, !.
+getShipPosition(Faction, Board, X, Z, X, Z) :-
+    getMovementLayer(X, Z, Board, Movement),
+    ship(Faction, Ship),
+    Ship == Movement.
+getShipPosition(Faction, Board, X, Z, Px, Pz) :-
+    getBoardSize(Board, Size),
+    X == Size,
+    NX is 0,
+    NZ is Z+1,
+    getShipPosition(Faction, Board, NX, NZ, Px, Pz).
+getShipPosition(Faction, Board, X, Z, Px, Pz) :-
+    getBoardSize(Board, Size),
+    X < Size,
+    NX is X+1,
+    getShipPosition(Faction, Board, NX, Z, Px, Pz).
 
+testAllMoves(Faction, Board, X, Z, MoveList, Structure) :-
+    testAllMoves(Faction, Board, X, Z, 0, 0, [], MoveList, Structure), !.
+testAllMoves(Faction, Board, X1, Z1, X2, Z2, CurrentMoveList, CurrentMoveList, Structure) :-
+    getBoardSize(Board, Size),
+    X2 == Size,
+    Z2 == Size.
+testAllMoves(Faction, Board, X1, Z1, X2, Z2, CurrentMoveList, MoveList, Structure) :-
+    getBoardSize(Board, Size),
+    X2 == Size,
+    NX is 0,
+    NZ is Z2+1,
+    testAllMoves(Faction, Board, X1, Z1, NX, NZ, CurrentMoveList, MoveList, Structure).
+testAllMoves(Faction, Board, X1, Z1, X2, Z2, [], MoveList, Structure) :-
+    getBoardSize(Board, Size),
+    X2 < Size,
+    moveShip(Faction, Board, X1, Z1, X2, Z2, TempBoard),
+    placeStructure(Faction, TempBoard, Structure, X2, Z2, NewBoard),
+    NX is X2+1,
+    testAllMoves(Faction, Board, X1, Z1, NX, Z2, [NewBoard], MoveList, Structure),!.
+testAllMoves(Faction, Board, X1, Z1, X2, Z2, CurrentMoveList, MoveList, Structure) :-
+    getBoardSize(Board, Size),
+    X2 < Size,
+    moveShip(Faction, Board, X1, Z1, X2, Z2, TempBoard),
+    placeStructure(Faction, TempBoard, Structure, X2, Z2, NewBoard),
+    NX is X2+1,
+    append(CurrentMoveList,[NewBoard], NCurrentMoveList),
+    testAllMoves(Faction, Board, X1, Z1, NX, Z2, NCurrentMoveList, MoveList, Structure),!.
+testAllMoves(Faction, Board, X1, Z1, X2, Z2, CurrentMoveList, MoveList, Structure) :-
+    CurrentMoveList \= 0,
+    getBoardSize(Board, Size),
+    X2 < Size,
+    NX is X2+1,
+    testAllMoves(Faction, Board, X1, Z1, NX, Z2, CurrentMoveList, MoveList, Structure),!.
+
+getAllShipPositions(Faction, Board, XList, ZList, Number) :-
+    findall(X, getShipPosition(Faction, Board, X, Z), XList),
+    findall(Z, getShipPosition(Faction, Board, X, Z), ZList),
+    length(XList, Length),
+    Number is Length-1.
+
+getAllPossibleBoards(Faction, Board, X, Z, Current, Current) :-
+    getAllShipPositions(Faction, Board, XList, ZList, Number),
+    X == Number,!.
+getAllPossibleBoards(Faction, Board, X, Z, Current, PossibleBoards) :-
+    getAllShipPositions(Faction, Board, XList, ZList, Number),
+    X < Number,
+    Z < Number,
+    nth0(X, XList, Px),
+    nth0(Z, ZList, Pz),
+    testAllMoves(Faction, Board, Px, Pz, MovesColony, 'colony'),
+    append(Current, MovesColony, TempCurrent),
+    testAllMoves(Faction, Board, Px, Pz, MovesTradeStation, 'trade station'),
+    append(TempCurrent, MovesTradeStation, NCurrent),
+    NX is X+1,
+    NZ is Z+1,
+    getAllPossibleBoards(Faction, Board, NX, NZ, NCurrent, PossibleBoards).
     

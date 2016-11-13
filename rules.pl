@@ -55,6 +55,8 @@ cantMoveInto(System) :-
     colony(System).
 cantMoveInto(System) :-
     tradeStation(System).
+cantMoveInto(Ship) :-
+    ship(_, Ship).
     
 canMoveInto(System) :- \+ cantMoveInto(System).
 
