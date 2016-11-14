@@ -2,10 +2,10 @@
 
 board([[[' ',v,' '],[' ',v,' '],[' ',v,' '],['A',g,' '],['A',g,' '],[' ',2,' '],[' ',0,' '],[' ',v,' '],[' ',v,' ']],
        [[' ',v,' '],[' ',v,' '],['A',g,' '],['A',g,' '],[' ',1,' '],[' ',b,' '],[' ',1,' '],[' ',2,' '],[' ',1,' ']],
-       [[' ',v,' '],[' ',v,' '],[' ',0,' '],[' ',1,' '],[' ',3,' '],[' ',z,o],[' ',3,' '],[' ',w,' '],[' ',0,' ']],
-       [[' ',v,' '],[' ',1,' '],[' ',w,' '],[' ',2,p],[' ',1,' '],[' ',2,' '],[' ',1,' '],[' ',1,' '],[' ',v,' ']],
-       [[' ',v,' '],[' ',3,' '],[' ',1,l],[' ',1,' '],[' ',z,' '],[' ',1,' '],[' ',1,' '],[' ',0,' '],[' ',v,' ']],
-       [[' ',v,' '],[' ',0,p],[' ',1,p],[' ',1,' '],[' ',2,' '],[' ',1,' '],[' ',w,' '],[' ',3,' '],[' ',v,' ']],
+       [[' ',v,' '],[' ',v,' '],[' ',0,' '],[' ',1,' '],[' ',3,' '],[' ',z,' '],[' ',3,' '],[' ',w,' '],[' ',0,' ']],
+       [[' ',v,' '],[' ',1,' '],[' ',w,' '],[' ',2,' '],[' ',1,' '],[' ',2,' '],[' ',1,' '],[' ',1,' '],[' ',v,' ']],
+       [[' ',v,' '],[' ',3,' '],[' ',1,' '],[' ',1,' '],[' ',z,' '],[' ',1,' '],[' ',1,' '],[' ',0,' '],[' ',v,' ']],
+       [[' ',v,' '],[' ',0,' '],[' ',1,' '],[' ',1,' '],[' ',2,' '],[' ',1,' '],[' ',w,' '],[' ',3,' '],[' ',v,' ']],
        [[' ',3,' '],[' ',b,' '],[' ',2,' '],[' ',3,' '],[' ',1,' '],[' ',1,' '],[' ',2,' '],[' ',v,' '],[' ',v,' ']],
        [[' ',1,' '],[' ',0,' '],[' ',z,' '],[' ',w,' '],[' ',1,' '],['B',h,' '],['B',h,' '],[' ',v,' '],[' ',v,' ']],
        [[' ',v,' '],[' ',v,' '],[' ',1,' '],[' ',0,' '],['B',h,' '],['B',h,' '],[' ',v,' '],[' ',v,' '],[' ',v,' ']]]).
@@ -201,7 +201,7 @@ placeStructure(Faction, Board, 'trade station', X, Z, NewBoard) :-
 
 getShipPosition(Faction, Board, X, Z) :-
     getShipPosition(Faction, Board, 0, 0, X, Z).
-getShipPosition(Faction, Board, X, Z, Px, Pz) :-
+getShipPosition(_, Board, X, Z, Px, Pz) :-
     getBoardSize(Board, Size),
     X == Size,
     Z == Size,
@@ -224,7 +224,7 @@ getShipPosition(Faction, Board, X, Z, Px, Pz) :-
 
 testAllMoves(Faction, Board, X, Z, MoveList, Structure) :-
     testAllMoves(Faction, Board, X, Z, 0, 0, [], MoveList, Structure), !.
-testAllMoves(Faction, Board, X1, Z1, X2, Z2, CurrentMoveList, CurrentMoveList, Structure) :-
+testAllMoves(_, Board, _, _, X2, Z2, CurrentMoveList, CurrentMoveList, _) :-
     getBoardSize(Board, Size),
     X2 == Size,
     Z2 == Size.
@@ -262,8 +262,8 @@ getAllShipPositions(Faction, Board, XList, ZList, Number) :-
     length(XList, Length),
     Number is Length-1.
 
-getAllPossibleBoards(Faction, Board, X, Z, Current, Current) :-
-    getAllShipPositions(Faction, Board, XList, ZList, Number),
+getAllPossibleBoards(Faction, Board, X, _, Current, Current) :-
+    getAllShipPositions(Faction, Board, _, _, Number),
     X == Number,!.
 getAllPossibleBoards(Faction, Board, X, Z, Current, PossibleBoards) :-
     getAllShipPositions(Faction, Board, XList, ZList, Number),

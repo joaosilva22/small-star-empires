@@ -1,19 +1,3 @@
-/*joga(+TipoDeJogo, +Dificuldade) :-
-    inicializacao(+TipoDeJogo),
-    repeat,
-        joga(+Dificuldade), % final do joga por um cut (!.) para evitar backtracking
-        testaTermina,       % alternativamente usar once()
-    mostraResultado.
-
-% Guardar o histórico da jogada
-assert(+NumDeJogada, +Tabuleiro).
-
-avaliaPosicao(+Tabuleiro, +Jogador, -Valor).
-
-geraMelhorTabuleiro(+Tabuleiro, +Jogador, -MelhorTabuleiro) :-
-    geraTabuleiro(+Tabuleiro, -possiveisTabuleiros),
-    avaliaTabuleiros(+PossiveisTabuleiros, -MelhorTabuleiro).*/
-
 readPlayerInput(X1, Z1, X2, Z2, Structure) :-
     write('# Select source coordinates [X, Z] # '),
     read(Source),
@@ -28,7 +12,7 @@ readPlayerInput(X1, Z1, X2, Z2, Structure) :-
 
 validatePlayerInput(_,_,_,_,_,_,'exit') :-
     showMenu,!.
-validatePlayerInput(Faction, Board, X1, Z1, X2, Z2, Structure) :-
+validatePlayerInput(_, Board, X1, Z1, X2, Z2, Structure) :-
     getBoardSize(Board, Size),
     X1 < Size,
     Z1 < Size,
@@ -106,8 +90,8 @@ isGameOver(Board) :-
     FactionTwoBoards==0,!.
 
 printWinner(Points, Points) :-
-    write('Faction One: '), write(Points1), write(' Points\n'),
-    write('Faction Two: '), write(Points2), write(' Points\n'),
+    write('Faction One: '), write(Points), write(' Points\n'),
+    write('Faction Two: '), write(Points), write(' Points\n'),
     write('\nIt\'s a tie.\n').
 printWinner(Points1, Points2) :-
     Points1 > Points2,
@@ -124,7 +108,7 @@ findWinner(Board) :-
     calculateTotalPoints(factionTwo, Board, FactionTwoPoints),
     printWinner(FactionOnePoints, FactionTwoPoints).
 
-play(Turn, Board, Mode) :-
+play(_, Board, _) :-
     isGameOver(Board),
     cls,
     write('###############################\n'),
@@ -202,17 +186,17 @@ hasEnemyStructure(Faction, Board, X, Z, Result) :-
     baseSystem(System),
     \+ owns(Faction, System),
     Result is 1,!.
-hasEnemyStructure(Faction, Board, X, Z, Result) :-
+hasEnemyStructure(_,_,_,_, Result) :-
     Result is 0,!.
 
-hasEnemyStructureLeft(Faction, Board, 0, Z, Result) :-
+hasEnemyStructureLeft(_, _, 0, _, Result) :-
     Result is 0,!.
 hasEnemyStructureLeft(Faction, Board, X, Z, Result) :-
     X > 0,
     X1 is X-1,
     hasEnemyStructure(Faction, Board, X1, Z, Result),!.
 
-hasEnemyStructureRight(Faction, Board, X, Z, Result) :-
+hasEnemyStructureRight(_, Board, X, _, Result) :-
     getBoardSize(Board, Size),
     NSize is Size-1,
     X == NSize,
@@ -224,14 +208,14 @@ hasEnemyStructureRight(Faction, Board, X, Z, Result) :-
     X1 is X+1,
     hasEnemyStructure(Faction, Board, X1, Z, Result),!.
 
-hasEnemyStructureTop(Faction, Board, X, 0, Result) :-
+hasEnemyStructureTop(_, _, _, 0, Result) :-
     Result is 0,!.
 hasEnemyStructureTop(Faction, Board, X, Z, Result) :-
     Z > 0,
     Z1 is Z-1,
     hasEnemyStructure(Faction, Board, X, Z1, Result),!.
 
-hasEnemyStructureBottom(Faction, Board, X, Z, Result) :-
+hasEnemyStructureBottom(_, Board, _, Z, Result) :-
     getBoardSize(Board, Size),
     NSize is Size-1,
     Z == NSize,
@@ -243,9 +227,9 @@ hasEnemyStructureBottom(Faction, Board, X, Z, Result) :-
     Z1 is Z+1,
     hasEnemyStructure(Faction, Board, X, Z1, Result),!.
 
-hasEnemyStructureBottomLeft(Faction, Board, 0, Z, Result) :-
+hasEnemyStructureBottomLeft(_, _, 0, _, Result) :-
     Result is 0,!.
-hasEnemyStructureBottomLeft(Faction, Board, X, Z, Result) :-
+hasEnemyStructureBottomLeft(_, Board, _, Z, Result) :-
     getBoardSize(Board, Size),
     NSize is Size-1,
     Z == NSize,
@@ -259,9 +243,9 @@ hasEnemyStructureBottomLeft(Faction, Board, X, Z, Result) :-
     Z1 is Z+1,
     hasEnemyStructure(Faction, Board, X1, Z1, Result),!.
 
-hasEnemyStructureTopRight(Faction, Board, X, 0, Result) :-
+hasEnemyStructureTopRight(_, _, _, 0, Result) :-
     Result is  0,!.
-hasEnemyStructureTopRight(Faction, Board, X, Z, Result) :-
+hasEnemyStructureTopRight(_, Board, X, _, Result) :-
     getBoardSize(Board, Size),
     NSize is Size-1,
     X == NSize,
@@ -292,7 +276,7 @@ countAdjacentEnemyStructures(Faction, Board, X, Z, Result) :-
 
 calculateTradeStationPoints(Faction, Board, Points) :-
     calculateTradeStationPoints(Faction, Board, 0, 0, 0, Points),!.
-calculateTradeStationPoints(Faction, Board, X, Z, CurrentPoints, CurrentPoints) :-
+calculateTradeStationPoints(_, Board, X, Z, CurrentPoints, CurrentPoints) :-
     getBoardSize(Board, Size),
     X == Size,
     Z == Size.
@@ -321,7 +305,7 @@ calculateTradeStationPoints(Faction, Board, X, Z, CurrentPoints, Points) :-
 
 countNebulae(Faction, Board, Colour, Number) :-
     countNebulae(Faction, Board, 0, 0, Colour, 0, Number), !.
-countNebulae(Faction, Board, X, Z, Colour, CurrentNumber, CurrentNumber) :-
+countNebulae(_, Board, X, Z, _, CurrentNumber, CurrentNumber) :-
     getBoardSize(Board, Size),
     X == Size,
     Z == Size.
@@ -398,18 +382,18 @@ calculateTotalPoints(Faction, Board, Points) :-
 
 getHighestValue(List, Value, Index) :-
     getHighestValue(List, 0, 0, 0, Value, Index),!.
-getHighestValue([], HighValue, HighIndex, CurrentIndex, HighValue, HighIndex).
-getHighestValue([X|Ys], HighValue, HighIndex, CurrentIndex, Value, Index) :-
+getHighestValue([], HighValue, HighIndex, _, HighValue, HighIndex).
+getHighestValue([X|Ys], HighValue, _, CurrentIndex, Value, Index) :-
     X > HighValue,
     NHighValue is X,
     NHighIndex is CurrentIndex,
     NCurrentIndex is CurrentIndex+1,
     getHighestValue(Ys, NHighValue, NHighIndex, NCurrentIndex, Value, Index).
-getHighestValue([X|Ys], HighValue, HighIndex, CurrentIndex, Value, Index) :-
+getHighestValue([_|Ys], HighValue, HighIndex, CurrentIndex, Value, Index) :-
     NCurrentIndex is CurrentIndex+1,
     getHighestValue(Ys, HighValue, HighIndex, NCurrentIndex, Value, Index).
 
-getAllPossiblePoints(Faction, PossibleBoards, Index, Current, Current) :-
+getAllPossiblePoints(_, PossibleBoards, Index, Current, Current) :-
     length(PossibleBoards, Length),
     Index == Length,!.
 getAllPossiblePoints(Faction, PossibleBoards, Index, [], Points) :-
@@ -427,5 +411,5 @@ getAllPossiblePoints(Faction, PossibleBoards, Index, Current, Points) :-
 getBestBoard(Faction, Board, NewBoard) :-
     getAllPossibleBoards(Faction, Board, 0, 0, [], Result),
     getAllPossiblePoints(Faction, Result, 0, [], Points),
-    getHighestValue(Points, Value, Index),
+    getHighestValue(Points, _, Index),
     nth0(Index, Result, NewBoard).
